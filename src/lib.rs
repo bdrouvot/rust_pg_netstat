@@ -76,6 +76,7 @@ impl ConfigLoader {
             "Network device names to capture packets from, delimited by comma, maximum 4 devices",
             &ret.devices_guc,
             GucContext::Sighup,
+            GucFlags::default(),
         );
         GucRegistry::define_int_guc(
             "pg_netstat.interval",
@@ -85,6 +86,7 @@ impl ConfigLoader {
             1,
             900_000,
             GucContext::Sighup,
+            GucFlags::default(),
         );
         GucRegistry::define_bool_guc(
             "pg_netstat.capture_loopback",
@@ -92,6 +94,7 @@ impl ConfigLoader {
             "Whether capture packets on loopback device",
             &ret.capture_loopback_guc,
             GucContext::Sighup,
+            GucFlags::default(),
         );
         GucRegistry::define_int_guc(
             "pg_netstat.packet_wait_time",
@@ -101,6 +104,7 @@ impl ConfigLoader {
             1,
             10,
             GucContext::Sighup,
+            GucFlags::default(),
         );
         GucRegistry::define_int_guc(
             "pg_netstat.pcap_buffer_size",
@@ -110,6 +114,7 @@ impl ConfigLoader {
             131_070,
             90_000_000,
             GucContext::Sighup,
+            GucFlags::default(),
         );
         GucRegistry::define_int_guc(
             "pg_netstat.pcap_snaplen",
@@ -119,6 +124,7 @@ impl ConfigLoader {
             96,
             65535,
             GucContext::Sighup,
+            GucFlags::default(),
         );
         GucRegistry::define_int_guc(
             "pg_netstat.pcap_timeout",
@@ -128,6 +134,7 @@ impl ConfigLoader {
             1,
             30_000,
             GucContext::Sighup,
+            GucFlags::default(),
         );
         ret
     }
@@ -445,9 +452,8 @@ pub extern "C" fn bg_worker_main(_arg: pg_sys::Datum) {
     let port = {
         let port = Mutex::new(0i32);
         BackgroundWorker::transaction(|| {
-            let port_setting = Spi::get_one::<String>("SELECT current_setting('port')")
+            let port_setting = Spi::get_one("SELECT current_setting('port')")
                 .expect("query port failed")
-                .parse()
                 .unwrap();
             *port.lock().unwrap() = port_setting;
         });
