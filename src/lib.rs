@@ -2,7 +2,7 @@
 
 use heapless::{String as HLString, Vec as HLVec};
 use pcap::{Active, Capture, Device, Direction, IfFlags};
-use pgx::{bgworkers::*, guc::*, lwlock::PgLwLock, prelude::*, shmem::*};
+use pgrx::{bgworkers::*, guc::*, lwlock::PgLwLock, prelude::*, shmem::*};
 use std::collections::VecDeque;
 use std::iter::Iterator;
 use std::str::FromStr;
@@ -10,7 +10,7 @@ use std::sync::Mutex;
 use std::time::Duration;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-pgx::pg_module_magic!();
+pgrx::pg_module_magic!();
 
 extension_sql_file!("../sql/bootstrap.sql", bootstrap);
 extension_sql_file!("../sql/finalize.sql", finalize);
@@ -193,7 +193,7 @@ impl Slot {
     }
 }
 
-unsafe impl PGXSharedMemory for Slot {}
+unsafe impl PGRXSharedMemory for Slot {}
 
 #[derive(Default, Clone)]
 struct Stats {
@@ -243,13 +243,13 @@ impl Stats {
     }
 }
 
-unsafe impl PGXSharedMemory for Stats {}
+unsafe impl PGRXSharedMemory for Stats {}
 
 static STATS: PgLwLock<Stats> = PgLwLock::new();
 
 #[pg_guard]
 pub extern "C" fn _PG_init() {
-    pgx::pg_shmem_init!(STATS);
+    pgrx::pg_shmem_init!(STATS);
 
     BackgroundWorkerBuilder::new("pg_netstat background worker")
         .set_function("bg_worker_main")
@@ -522,7 +522,7 @@ pub extern "C" fn bg_worker_main(_arg: pg_sys::Datum) {
 #[cfg(any(test, feature = "pg_test"))]
 #[pg_schema]
 mod tests {
-    use pgx::*;
+    use pgrx::*;
 
     #[pg_test]
     fn test_pg_netstat() {
